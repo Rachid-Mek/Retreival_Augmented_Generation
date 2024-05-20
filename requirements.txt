@@ -1,1 +1,9 @@
 huggingface_hub==0.22.2
+qdrant-client==1.8.0
+tiktoken==0.6.0
+transformers==4.40.2
+torch==2.2.1
+cohere==5.4.0
+spacy==3.7.4
+minijinja==2.0.1
+textblob==0.18.0.post0
