@@ -76,6 +76,11 @@ def save_chat( question, answer, upvote, downvote, flag):
     print("New row added successfully to", file_path)
 
 
+def check_textbox(text):
+    if text.strip():
+        return enable_btn
+    else:
+        return disable_btn
 
 def upvote_last_response():
     print("Upvoted")
@@ -97,34 +102,37 @@ def remove_last_response(chatbot):
     textbox =state.current_query
     state.history.pop()
     state.history.pop()
+    # clear the last response
     chatbot.clear()
-    
     return (textbox ,chatbot ) + (enable_btn,) * 5
+
 def quit_chat():
     return demo.close()
 
 #  ================================================================================================================================ 
 
 def chat(
-    chatbot,
-    message,
-    max_tokens,
-    temperature,
-    top_p,
-):
-    question= message
-    chatbot.append((question,""))
+    chatbot, 
+    message, 
+    max_tokens, 
+    temperature, 
+    top_p):
+
+    question = message
+    chatbot.append((question, None))
     yield ("" , chatbot) + (disable_btn,) * 5
+
     messages = [{"role": "system", "content": system_message}]
-    history= state.get_history()
+    history = state.get_history()
     state.save_question(message)
 
     for val in history:
         messages.append(val)
 
     messages.append({"role": "user", "content": run_rag(message)})
-    response = "This is a response to the question"
-    chatbot.append((question,""))
+    # response = "This is a response to the question "
+    response = ""
+
     for msg in client.chat_completion(
         messages,
         max_tokens=max_tokens,
@@ -132,17 +140,13 @@ def chat(
         temperature=temperature,
         top_p=top_p,
     ):
-       
         token = msg.choices[0].delta.content
         response += str(token)
-        # chatbot.append(( response, response))
-        # yield "" , chatbot 
-    chatbot.clear()
-    chatbot.append((question , response))
-    state.save_response(response)
-    yield ("" , chatbot) + (enable_btn,) * 5
+        chatbot[-1] = (question, response)
+        yield ("" , chatbot) + (disable_btn,) * 5
 
- 
+    state.save_response(response)
+    yield  ("" , chatbot) + (enable_btn,) * 5
   
 
 #  ================================================================================================================================
@@ -154,14 +158,7 @@ theme = gr.themes.Base(
     radius_size=sizes.radius_lg,
     spacing_size=sizes.spacing_sm,
     font=[gr.themes.GoogleFont('Poppins'), gr.themes.GoogleFont('Reddit Sans'), 'system-ui', 'sans-serif'],
-)
-EXAMPLES = [
-    [ "Tell me about the latest news in the world ?"],
-    [ "Tell me about the increase in the price of Bitcoin ?"],
-    [ "Tell me about the actual situation in Ukraine ?"],
-    [ "Tell me about current situation in palestine ?"],
-]
- 
+) 
 #  ================================================================================================================================
  
 
@@ -182,8 +179,6 @@ with gr.Blocks(title="RAG", theme=theme, css=block_css , fill_height=True) as de
     gr.Markdown("# **Retrieval Augmented Generation (RAG) Chatbot**" )
     gr.Markdown("This is a demo of a chatbot that uses the RAG system to generate responses to user queries. RAG is a combination of a retriever and a generator, which allows it to generate responses based on the context of the conversation. The chatbot can be used to answer questions, provide information, and engage in conversation with users.")
     with gr.Row(variant="panel"):
- 
-            
    
         with gr.Column(scale=10):
             chatbot = gr.Chatbot(
@@ -201,7 +196,7 @@ with gr.Blocks(title="RAG", theme=theme, css=block_css , fill_height=True) as de
                     textbox.render()
 
             with gr.Column(scale=1, min_width=100):
-                submit_btn = gr.Button(value="Submit", variant="primary", interactive=True)
+                submit_btn = gr.Button(value="Submit", variant="primary", interactive=False)
     
         
             with gr.Row(elem_id="buttons") as button_row:
@@ -270,13 +265,18 @@ with gr.Blocks(title="RAG", theme=theme, css=block_css , fill_height=True) as de
 
     submit_btn.click(    
         chat ,
-        [ chatbot, textbox , max_output_tokens, temperature, top_p],
+        [chatbot, textbox , max_output_tokens, temperature, top_p],
         [textbox ,chatbot] + btn_list , 
                 )
+    
+    textbox.change(
+        check_textbox,
+        [textbox],
+        [submit_btn]
+    )
  
  #  ================================================================================================================================
+demo.queue()
 demo.launch()
-
-
 
 #  ================================================================================================================================
