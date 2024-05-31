@@ -1,8 +1,9 @@
-import csv
 import gradio as gr
 from huggingface_hub import InferenceClient
 import os
-
+from pymongo import MongoClient
+from pymongo.server_api import ServerApi
+from datetime import datetime
 from matplotlib import colors
 from rag import run_rag
 from gradio.themes.utils import (
@@ -12,69 +13,73 @@ from gradio.themes.utils import (
     get_theme_assets,
     sizes,
 )
- 
+
+MONGO_URI = "mongodb+srv://rachidmkd16:gVvZdKv4L8EArNjC@news-database.kjitsql.mongodb.net/?retryWrites=true&w=majority&appName=news-database"
+DB_NAME = 'news_database'
+COLLECTION_NAME = 'tracking'
+client = MongoClient(MONGO_URI, server_api=ServerApi('1'))
+db = client[DB_NAME]
+
 #  ================================================================================================================================
 TOKEN = os.getenv("HF_TOKEN")
-client = InferenceClient("HuggingFaceH4/zephyr-7b-beta" , token=TOKEN)
-system_message ="You are a capable and freindly assistant."
+client = InferenceClient("HuggingFaceH4/zephyr-7b-beta", token=TOKEN)
+system_message = "You are a capable and friendly assistant."
 
 no_change_btn = gr.Button()
 enable_btn = gr.Button(interactive=True)
 disable_btn = gr.Button(interactive=False)
-# ================================================================================================================================
+
+#  ================================================================================================================================
 class Int_State:
     def __init__(self):
-        # initialise history of type list[tuple[str, str]]
+        # initialize history of type list[tuple[str, str]]
         self.history = []
         self.current_query = ""
         self.current_response = ""
         self.roles = ["user", "system"]
-        print("State has been initialise")
+        print("State has been initialized")
     
     def save_question(self, question):
         self.current_query = question
         self.current_response = ""
         self.history.append({"role": "user", "content": question})
-        print("Question added ")
+        print("Question added")
  
-    def save_response(self,  assistant_message):
-        # current_question = self.current_query
+    def save_response(self, assistant_message):
         self.current_response = assistant_message
         self.history.append({"role": "system", "content": assistant_message})
-        print("Response saved  ")
- 
+        print("Response saved")
  
     def get_history(self):
         return self.history
   
 #  ================================================================================================================================
 state = Int_State()
+
 #  ================================================================================================================================
-def clear_chat(chatbot ):
+def clear_chat(chatbot):
     state.history = []
- 
-    chatbot.clear() 
- 
-    yield ("" , chatbot) + (enable_btn,) * 5
+    chatbot.clear()
+    yield ("", chatbot) + (enable_btn,) * 5
 
 #  ================================================================================================================================
-def save_chat( question, answer, upvote, downvote, flag):
-    file_path = "chat_data.csv"
-    with open(file_path, 'r', newline='') as file:
-        reader = csv.reader(file)
-        data = list(reader)
+def save_interaction_to_db(question, answer, upvote, downvote, flag):
+    db[COLLECTION_NAME].update_one(
+        {"question": question, "answer": answer},
+        {
+            "$set": {
+                "upvote": upvote,
+                "downvote": downvote,
+                "flag": flag,
+                "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            }
+        },
+        upsert=True
+    )
+    print("Interaction saved to MongoDB")
 
-    # Add new row with provided data
-    new_row = [question, answer, upvote, downvote, flag]
-    data.append(new_row)
-
-    # Write updated data back to CSV file
-    with open(file_path, 'w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerows(data)
-
-    print("New row added successfully to", file_path)
-
+def save_chat(question, answer, upvote=0, downvote=0, flag=0):
+    save_interaction_to_db(question, answer, upvote, downvote, flag)
 
 def check_textbox(text):
     if text.strip():
@@ -85,31 +90,31 @@ def check_textbox(text):
 def upvote_last_response():
     print("Upvoted")
     save_chat(state.current_query, state.current_response, 1, 0, 0)
-    return (disable_btn,) * 3 + (enable_btn,)*2
+    return (disable_btn,) * 3 + (enable_btn,) * 2
 
 def downvote_last_response():
     print("Downvoted")
     save_chat(state.current_query, state.current_response, 0, 1, 0)
-    return (disable_btn,) * 3 + (enable_btn,)*2
+    return (disable_btn,) * 3 + (enable_btn,) * 2
 
 def flag_last_response():
     print("Flagged")
     save_chat(state.current_query, state.current_response, 0, 0, 1)
-    return (disable_btn,) * 3 + (enable_btn,)*2
- 
-def remove_last_response(chatbot): 
+    return (disable_btn,) * 3 + (enable_btn,) * 2
+
+def remove_last_response(chatbot):
     print("Regenerated")
-    textbox =state.current_query
+    textbox = state.current_query
     state.history.pop()
     state.history.pop()
     # clear the last response
     chatbot.clear()
-    return (textbox ,chatbot ) + (enable_btn,) * 5
+    return (textbox, chatbot) + (enable_btn,) * 5
 
 def quit_chat():
     return demo.close()
 
-#  ================================================================================================================================ 
+#  ================================================================================================================================
 
 def chat(
     chatbot, 
@@ -120,17 +125,19 @@ def chat(
 
     question = message
     chatbot.append((question, None))
-    yield ("" , chatbot) + (disable_btn,) * 5
+    yield ("", chatbot) + (disable_btn,) * 5
 
     messages = [{"role": "system", "content": system_message}]
     history = state.get_history()
     state.save_question(message)
 
+    if len(history) > 1:
+        print("History: ", history[-2])
     for val in history:
         messages.append(val)
 
     messages.append({"role": "user", "content": run_rag(message)})
-    # response = "This is a response to the question "
+
     response = ""
 
     for msg in client.chat_completion(
@@ -143,11 +150,11 @@ def chat(
         token = msg.choices[0].delta.content
         response += str(token)
         chatbot[-1] = (question, response)
-        yield ("" , chatbot) + (disable_btn,) * 5
+        yield ("", chatbot) + (disable_btn,) * 5
 
     state.save_response(response)
-    yield  ("" , chatbot) + (enable_btn,) * 5
-  
+    save_chat(question, response)  
+    yield ("", chatbot) + (enable_btn,) * 5
 
 #  ================================================================================================================================
 
@@ -158,23 +165,25 @@ theme = gr.themes.Base(
     radius_size=sizes.radius_lg,
     spacing_size=sizes.spacing_sm,
     font=[gr.themes.GoogleFont('Poppins'), gr.themes.GoogleFont('Reddit Sans'), 'system-ui', 'sans-serif'],
-) 
+)
+
 #  ================================================================================================================================
- 
 
 block_css = """
 #buttons button {
     min-width: min(120px,100%);
 }
 """
+
 #  ================================================================================================================================
+
 textbox = gr.Textbox(show_label=False,
                         placeholder="Enter a question or message...",
                         container=False,
                         show_copy_button=True
                         )
 
-with gr.Blocks(title="RAG", theme=theme, css=block_css , fill_height=True) as demo:
+with gr.Blocks(title="RAG", theme=theme, css=block_css, fill_height=True) as demo:
     
     gr.Markdown("# **Retrieval Augmented Generation (RAG) Chatbot**" )
     gr.Markdown("This is a demo of a chatbot that uses the RAG system to generate responses to user queries. RAG is a combination of a retriever and a generator, which allows it to generate responses based on the context of the conversation. The chatbot can be used to answer questions, provide information, and engage in conversation with users.")
@@ -200,33 +209,29 @@ with gr.Blocks(title="RAG", theme=theme, css=block_css , fill_height=True) as de
     
         
             with gr.Row(elem_id="buttons") as button_row:
-                upvote_btn = gr.Button(value="👍  Upvote", interactive=False , variant="secondary")
-                downvote_btn = gr.Button(value="👎  Downvote", interactive=False , variant="secondary")
-                flag_btn = gr.Button(value="⚠️  Flag", interactive=False , variant="secondary")
-                #stop_btn = gr.Button(value="⏹️  Stop Generation", interactive=False)
-                regenerate_btn = gr.Button(value="🔄  Regenerate", interactive=False ,variant="secondary")
+                upvote_btn = gr.Button(value="👍  Upvote", interactive=False, variant="secondary")
+                downvote_btn = gr.Button(value="👎  Downvote", interactive=False, variant="secondary")
+                flag_btn = gr.Button(value="⚠️  Flag", interactive=False, variant="secondary")
+                regenerate_btn = gr.Button(value="🔄  Regenerate", interactive=False, variant="secondary")
             with gr.Column(scale=3):
-                clear_btn = gr.Button(value="🗑️  Clear", interactive=False , variant="stop")
+                clear_btn = gr.Button(value="🗑️  Clear", interactive=False, variant="stop")
     
             with gr.Accordion("Examples", open=True) as Examples_row:
                 gr.Examples(examples=[
-                [f"Tell me about the latest news in the world ?"],
-                [f"Tell me about the increase in the price of Bitcoin ?"],
-                [f"Tell me about the actual situation in Ukraine ?"],
-                [f"How true is the news about the increase in the price of oil ?"],
-                [f"Tell me about current situation in palestinian ?"],
-                [f"Tell me about the current situation in Afghanistan ?"],
-                [f"what are the agenda of the United Nations ?"],
-                ["how trump's compain going ?"],
-            ],inputs=[textbox], label="Examples")
+                [f"Tell me about the latest news in the world?"],
+                [f"Tell me about the increase in the price of Bitcoin?"],
+                [f"Tell me about the actual situation in Ukraine?"],
+                [f"How true is the news about the increase in the price of oil?"],
+                [f"Tell me about current situation in Palestinian?"],
+                [f"Tell me about the current situation in Afghanistan?"],
+                [f"What are the agenda of the United Nations?"],
+                ["How is Trump's campaign going?"],
+            ], inputs=[textbox], label="Examples")
 
-
-                
             with gr.Accordion("Parameters", open=False) as parameter_row:
-                    temperature = gr.Slider(minimum=0.1, maximum=1.0, value=0.2, step=0.1, interactive=True, label="Temperature",)
-                    top_p = gr.Slider(minimum=0.1, maximum=1.0, value=0.7, step=0.1, interactive=True, label="Top P",)
-                    max_output_tokens = gr.Slider(minimum=0, maximum=4096, value=1024, step=64, interactive=True, label="Max output tokens",)
-        
+                temperature = gr.Slider(minimum=0.1, maximum=1.0, value=0.2, step=0.1, interactive=True, label="Temperature")
+                top_p = gr.Slider(minimum=0.1, maximum=1.0, value=0.7, step=0.1, interactive=True, label="Top P")
+                max_output_tokens = gr.Slider(minimum=0, maximum=4096, value=1024, step=64, interactive=True, label="Max output tokens")
 
 #  ================================================================================================================================
     btn_list = [upvote_btn, downvote_btn, flag_btn, regenerate_btn, clear_btn]
@@ -250,24 +255,24 @@ with gr.Blocks(title="RAG", theme=theme, css=block_css , fill_height=True) as de
     regenerate_btn.click(
         remove_last_response,
         [chatbot],
-        [textbox , chatbot] + btn_list,
+        [textbox, chatbot] + btn_list,
     ).then(
         chat,
-        [ chatbot, textbox, max_output_tokens, temperature, top_p],
+        [chatbot, textbox, max_output_tokens, temperature, top_p],
         [textbox, chatbot] + btn_list
     )
 
     clear_btn.click(
         clear_chat,
         [chatbot],
-        [textbox , chatbot] + btn_list,
+        [textbox, chatbot] + btn_list,
     )
 
     submit_btn.click(    
-        chat ,
-        [chatbot, textbox , max_output_tokens, temperature, top_p],
-        [textbox ,chatbot] + btn_list , 
-                )
+        chat,
+        [chatbot, textbox, max_output_tokens, temperature, top_p],
+        [textbox, chatbot] + btn_list, 
+    )
     
     textbox.change(
         check_textbox,
@@ -275,7 +280,7 @@ with gr.Blocks(title="RAG", theme=theme, css=block_css , fill_height=True) as de
         [submit_btn]
     )
  
- #  ================================================================================================================================
+#  ================================================================================================================================
 demo.queue()
 demo.launch()
 
