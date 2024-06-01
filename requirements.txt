@@ -9,3 +9,4 @@ minijinja==2.0.1
 scikit-learn
 textblob==0.18.0.post0
 sentence-transformers==2.7.0
+pymongo==4.7.2
