@@ -153,6 +153,7 @@ def chat(
     #     response += str(token)
     #     chatbot[-1] = (question, response)
     #     yield ("", chatbot) + (disable_btn,) * 5
+    stop_sequences = ["[/SYS]"] 
     prompt=run_rag(question)
     for msg in client.text_generation(
         prompt=prompt,
@@ -160,6 +161,10 @@ def chat(
         max_new_tokens=max_tokens,
         top_p=top_p,
         stream=True,
+        frequency_penalty = 2,
+        do_sample=True ,
+        stop_sequences =stop_sequences,
+        best_of=1,
     ):
  
         # token = msg.choices[0].delta.content
