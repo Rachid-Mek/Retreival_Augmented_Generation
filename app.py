@@ -245,7 +245,7 @@ with gr.Blocks(title="RAG", theme=theme, css=block_css, fill_height=True) as dem
             with gr.Accordion("Parameters", open=False) as parameter_row:
                 temperature = gr.Slider(minimum=0.1, maximum=1.0, value=0.2, step=0.1, interactive=True, label="Temperature")
                 top_p = gr.Slider(minimum=0.1, maximum=1.0, value=0.7, step=0.1, interactive=True, label="Top P")
-                max_output_tokens = gr.Slider(minimum=0, maximum=4096, value=1024, step=64, interactive=True, label="Max output tokens")
+                max_output_tokens = gr.Slider(minimum=0, maximum=4096, value=480, step=64, interactive=True, label="Max output tokens")
 
 #  ================================================================================================================================
     btn_list = [upvote_btn, downvote_btn, flag_btn, regenerate_btn, clear_btn]
