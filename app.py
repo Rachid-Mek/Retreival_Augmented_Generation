@@ -22,6 +22,7 @@ db = client[DB_NAME]
 
 #  ================================================================================================================================
 system_message ="You are a capable and freindly assistant."
+TOKEN = os.getenv("HF_TOKEN")
 Endpoint_URL = "https://gx986bv0z1k42aqe.us-east-1.aws.endpoints.huggingface.cloud/"
 client = InferenceClient(Endpoint_URL, token=TOKEN)
 system_message = "You are a capable and friendly assistant."
