@@ -164,7 +164,7 @@ def chat(
  
         # token = msg.choices[0].delta.content
         response += str(msg)
-        # chatbot.append(( response, response))
+        # chatbot.append(( response, response)) 
         chatbot[-1] = (question, response)
         yield ("", chatbot) + (disable_btn,) * 5
     state.save_response(response)
