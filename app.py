@@ -21,8 +21,9 @@ client = MongoClient(MONGO_URI, server_api=ServerApi('1'))
 db = client[DB_NAME]
 
 #  ================================================================================================================================
-TOKEN = os.getenv("HF_TOKEN")
-client = InferenceClient("HuggingFaceH4/zephyr-7b-beta", token=TOKEN)
+system_message ="You are a capable and freindly assistant."
+Endpoint_URL = "https://gx986bv0z1k42aqe.us-east-1.aws.endpoints.huggingface.cloud/"
+client = InferenceClient(Endpoint_URL, token=TOKEN)
 system_message = "You are a capable and friendly assistant."
 
 no_change_btn = gr.Button()
@@ -140,18 +141,30 @@ def chat(
 
     response = ""
 
-    for msg in client.chat_completion(
-        messages,
-        max_tokens=max_tokens,
-        stream=True,
+    # for msg in client.chat_completion(
+    #     messages,
+    #     max_tokens=max_tokens,
+    #     stream=True,
+    #     temperature=temperature,
+    #     top_p=top_p,
+    # ):
+    #     token = msg.choices[0].delta.content
+    #     response += str(token)
+    #     chatbot[-1] = (question, response)
+    #     yield ("", chatbot) + (disable_btn,) * 5
+    for msg in client.text_generation(
+        prompt=run_rag(message),
         temperature=temperature,
+        max_new_tokens=max_tokens,
         top_p=top_p,
+        stream=True,
     ):
-        token = msg.choices[0].delta.content
-        response += str(token)
+ 
+        # token = msg.choices[0].delta.content
+        response += str(msg)
+        chatbot.append(( response, response))
         chatbot[-1] = (question, response)
         yield ("", chatbot) + (disable_btn,) * 5
-
     state.save_response(response)
     save_chat(question, response)  
     yield ("", chatbot) + (enable_btn,) * 5
