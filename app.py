@@ -138,7 +138,7 @@ def chat(
     for val in history:
         messages.append(val)
 
-    messages.append({"role": "user", "content": run_rag(message)})
+    # messages.append({"role": "user", "content": run_rag(message)})
 
     response = ""
 
@@ -153,8 +153,9 @@ def chat(
     #     response += str(token)
     #     chatbot[-1] = (question, response)
     #     yield ("", chatbot) + (disable_btn,) * 5
+    question=run_rag(question)
     for msg in client.text_generation(
-        prompt=run_rag(message),
+        prompt=run_rag(question),
         temperature=temperature,
         max_new_tokens=max_tokens,
         top_p=top_p,
