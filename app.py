@@ -153,9 +153,9 @@ def chat(
     #     response += str(token)
     #     chatbot[-1] = (question, response)
     #     yield ("", chatbot) + (disable_btn,) * 5
-    question=run_rag(question)
+    prompt=run_rag(question)
     for msg in client.text_generation(
-        prompt=run_rag(question),
+        prompt=prompt,
         temperature=temperature,
         max_new_tokens=max_tokens,
         top_p=top_p,
