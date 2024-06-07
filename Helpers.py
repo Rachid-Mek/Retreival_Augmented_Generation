@@ -26,7 +26,7 @@ def generate_prompt(context, question, history=None):
     else:
         prompt_context = "No context provided, Response based on the question only."
     prompt = f"""
-    <s>[INST] <<SYS>> You are a helpful, respectful and honest assistant. Always answer as helpfully as possible based on the context, while being safe. Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content, and dont mention that you used the provided context.<</SYS>>
+    <s><<SYS>> You are a helpful, respectful and honest assistant. Always answer as helpfully as possible based on the context, while being safe. Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content, and dont mention that you used the provided context.do not add any Additional Questions<</SYS>>
 
     Context \n :
     {prompt_context}
@@ -35,6 +35,7 @@ def generate_prompt(context, question, history=None):
 
     Response:
     """
+ 
     return prompt
 
 def llama(prompt):

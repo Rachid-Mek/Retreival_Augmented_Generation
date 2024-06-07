@@ -6,7 +6,7 @@ from Helpers import generate_prompt, llama, get_docs_by_indices , query_rewriter
 
 def run_rag(query, history=None):
     embedding_model = TextEmbedder()
-    uploader = QdrantU(collection_name='News_source')
+    uploader = QdrantU(collection_name='News_Articles_Source')
     try: 
         query = query_rewriter(query) 
         print("Query after rewriting: ", query)

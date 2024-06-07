@@ -23,8 +23,11 @@ db = client[DB_NAME]
 #  ================================================================================================================================
 system_message ="You are a capable and freindly assistant."
 TOKEN = os.getenv("HF_TOKEN")
-Endpoint_URL = "https://gx986bv0z1k42aqe.us-east-1.aws.endpoints.huggingface.cloud/"
-client = InferenceClient(Endpoint_URL, token=TOKEN)
+
+# Endpoint_URL = "https://gx986bv0z1k42aqe.us-east-1.aws.endpoints.huggingface.cloud/"
+# client = InferenceClient(Endpoint_URL, token=TOKEN)
+model_name = "HuggingFaceH4/zephyr-7b-beta"
+client = InferenceClient(model_name, token=TOKEN)
 system_message = "You are a capable and friendly assistant."
 
 no_change_btn = gr.Button()
@@ -138,40 +141,39 @@ def chat(
     for val in history:
         messages.append(val)
 
-    # messages.append({"role": "user", "content": run_rag(message)})
+    messages.append({"role": "user", "content": run_rag(message)})
 
     response = ""
 
-    # for msg in client.chat_completion(
-    #     messages,
-    #     max_tokens=max_tokens,
-    #     stream=True,
-    #     temperature=temperature,
-    #     top_p=top_p,
-    # ):
-    #     token = msg.choices[0].delta.content
-    #     response += str(token)
-    #     chatbot[-1] = (question, response)
-    #     yield ("", chatbot) + (disable_btn,) * 5
-    stop_sequences = ["[/SYS]"] 
-    prompt=run_rag(question)
-    for msg in client.text_generation(
-        prompt=prompt,
-        temperature=temperature,
-        max_new_tokens=max_tokens,
-        top_p=top_p,
+    for msg in client.chat_completion(
+        messages,
+        max_tokens=max_tokens,
         stream=True,
-        frequency_penalty = 2,
-        do_sample=True ,
-        stop_sequences =stop_sequences,
-        best_of=1,
+        temperature=temperature,
+        top_p=top_p,
     ):
- 
-        # token = msg.choices[0].delta.content
-        response += str(msg)
-        # chatbot.append(( response, response)) 
+        token = msg.choices[0].delta.content
+        response += str(token)
         chatbot[-1] = (question, response)
         yield ("", chatbot) + (disable_btn,) * 5
+    stop_sequences = [] 
+    # prompt=run_rag(question)
+    # print("Prompt: ", prompt)
+    # for msg in client.text_generation(
+    #     prompt=messages,
+    #     temperature=temperature,
+    #     max_new_tokens=max_tokens,
+    #     top_p=top_p,
+    #     stream=True,
+    #     frequency_penalty = 2,
+    #     do_sample=True ,
+    #     stop_sequences =stop_sequences,
+    # ):
+    #     # token = msg.choices[0].delta.content
+    #     response += str(msg)
+    #     # chatbot.append(( response, response)) 
+    #     chatbot[-1] = (question, response)
+    #     yield ("", chatbot) + (disable_btn,) * 5
     state.save_response(response)
     save_chat(question, response)  
     yield ("", chatbot) + (enable_btn,) * 5
@@ -251,7 +253,7 @@ with gr.Blocks(title="RAG", theme=theme, css=block_css, fill_height=True) as dem
             with gr.Accordion("Parameters", open=False) as parameter_row:
                 temperature = gr.Slider(minimum=0.1, maximum=1.0, value=0.2, step=0.1, interactive=True, label="Temperature")
                 top_p = gr.Slider(minimum=0.1, maximum=1.0, value=0.7, step=0.1, interactive=True, label="Top P")
-                max_output_tokens = gr.Slider(minimum=0, maximum=4096, value=480, step=64, interactive=True, label="Max output tokens")
+                max_output_tokens = gr.Slider(minimum=0, maximum=4096, value=1024, step=64, interactive=True, label="Max output tokens")
 
 #  ================================================================================================================================
     btn_list = [upvote_btn, downvote_btn, flag_btn, regenerate_btn, clear_btn]
