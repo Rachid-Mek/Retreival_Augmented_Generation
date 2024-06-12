@@ -24,10 +24,10 @@ db = client[DB_NAME]
 system_message ="You are a capable and freindly assistant."
 TOKEN = os.getenv("HF_TOKEN")
 
-# Endpoint_URL = "https://gx986bv0z1k42aqe.us-east-1.aws.endpoints.huggingface.cloud/"
-# client = InferenceClient(Endpoint_URL, token=TOKEN)
-model_name = "HuggingFaceH4/zephyr-7b-beta"
-client = InferenceClient(model_name, token=TOKEN)
+Endpoint_URL = "https://gx986bv0z1k42aqe.us-east-1.aws.endpoints.huggingface.cloud/"
+client = InferenceClient(Endpoint_URL, token=TOKEN)
+# model_name = "HuggingFaceH4/zephyr-7b-beta"
+# client = InferenceClient(model_name, token=TOKEN)
 system_message = "You are a capable and friendly assistant."
 
 no_change_btn = gr.Button()
@@ -141,39 +141,39 @@ def chat(
     for val in history:
         messages.append(val)
 
-    messages.append({"role": "user", "content": run_rag(message)})
+    # messages.append({"role": "user", "content": run_rag(message)})
 
     response = ""
 
-    for msg in client.chat_completion(
-        messages,
-        max_tokens=max_tokens,
-        stream=True,
-        temperature=temperature,
-        top_p=top_p,
-    ):
-        token = msg.choices[0].delta.content
-        response += str(token)
-        chatbot[-1] = (question, response)
-        yield ("", chatbot) + (disable_btn,) * 5
-    stop_sequences = [] 
-    # prompt=run_rag(question)
-    # print("Prompt: ", prompt)
-    # for msg in client.text_generation(
-    #     prompt=messages,
-    #     temperature=temperature,
-    #     max_new_tokens=max_tokens,
-    #     top_p=top_p,
+    # for msg in client.chat_completion(
+    #     messages,
+    #     max_tokens=max_tokens,
     #     stream=True,
-    #     frequency_penalty = 2,
-    #     do_sample=True ,
-    #     stop_sequences =stop_sequences,
+    #     temperature=temperature,
+    #     top_p=top_p,
     # ):
-    #     # token = msg.choices[0].delta.content
-    #     response += str(msg)
-    #     # chatbot.append(( response, response)) 
+    #     token = msg.choices[0].delta.content
+    #     response += str(token)
     #     chatbot[-1] = (question, response)
     #     yield ("", chatbot) + (disable_btn,) * 5
+    stop_sequences = ['<|eot_id|>']
+    prompt=run_rag(question, history=history)
+    # print("Prompt: ", prompt)
+    for msg in client.text_generation(
+        prompt=prompt,
+        temperature=temperature,
+        max_new_tokens=max_tokens,
+        top_p=top_p,
+        stream=True,
+        frequency_penalty = 2,
+        do_sample=True ,
+        stop_sequences =stop_sequences,
+    ):
+        # token = msg.choices[0].delta.content
+        response += str(msg)
+        # chatbot.append(( response, response)) 
+        chatbot[-1] = (question, response)
+        yield ("", chatbot) + (disable_btn,) * 5
     state.save_response(response)
     save_chat(question, response)  
     yield ("", chatbot) + (enable_btn,) * 5

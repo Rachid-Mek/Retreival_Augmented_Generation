@@ -18,17 +18,28 @@ Bert_model = BertModel.from_pretrained(model_name)
 sentence_transformer_model = SentenceTransformer("all-mpnet-base-v2")
 
 def generate_prompt(context, question, history=None):
+    history_summary = ""
+    if history:
+        for entry in history[-3:]:  # Limit to the last 3 entries for brevity
+            user_query, bot_response = entry["role"], entry["content"]
+            history_summary += f"User: {user_query}\nAssistant: {bot_response}\n"
+    
     context = ". ".join(context)
     print(context)
-    print("calculating the similarity...")
+    print("Calculating the similarity...")
+    
     if validate_revised_query(context, question, threshold=0.4):
         prompt_context = context
     else:
-        prompt_context = "No context provided, Response based on the question only."
+        prompt_context = "No context provided. Response based on the question only."
+    
     prompt = f"""
-    <s><<SYS>> You are a helpful, respectful and honest assistant. Always answer as helpfully as possible based on the context, while being safe. Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content, and dont mention that you used the provided context.do not add any Additional Questions<</SYS>>
+    <s><<SYS>> You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible based on the context, while being safe. Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Do not mention that you used the provided context. Do not add any additional questions.<</SYS>>
 
-    Context \n :
+    Conversation History:
+    {history_summary}
+
+    Context:
     {prompt_context}
 
     [INST] {question} [/INST]
@@ -37,6 +48,7 @@ def generate_prompt(context, question, history=None):
     """
  
     return prompt
+
 
 def llama(prompt):
     url = "https://api.edenai.run/v2/text/generation"
