@@ -1,42 +1,96 @@
 from transformers import BertTokenizer, BertModel
 import torch
 
-
 class TextEmbedder:
-    def __init__(self):
-        self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-        self.model = BertModel.from_pretrained('bert-base-uncased')
+  """
+  This class embeds text using a pre-trained BERT model.
+  """
 
-    def _mean_pooling(self, model_output, attention_mask):
-        token_embeddings = model_output.last_hidden_state
-        input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
-        sum_embeddings = torch.sum(token_embeddings * input_mask_expanded, 1)
-        sum_mask = torch.clamp(input_mask_expanded.sum(1), min=1e-9)
-        return sum_embeddings / sum_mask
+  def __init__(self):
+    """
+    Initializes the TextEmbedder object with a pre-trained BERT model and tokenizer.
+    """
+    self.tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+    self.model = BertModel.from_pretrained('bert-base-uncased')
 
-    def embed_text(self, examples):
-        inputs = self.tokenizer(
-            examples["content"], padding=True, truncation=True, return_tensors="pt"
-        )
-        with torch.no_grad():
-            model_output = self.model(**inputs)
-        pooled_embeds = self._mean_pooling(model_output, inputs["attention_mask"])
-        return {"embedding": pooled_embeds.cpu().numpy()}
-    
-    def generate_embeddings(self, dataset):
-        return dataset.map(self.embed_text, batched=True, batch_size=128)
-    
-    def embed_query(self, query_text):
-        query_inputs = self.tokenizer(
-            query_text,
-            padding=True,
-            truncation=True,
-            return_tensors="pt"
-        )
 
-        with torch.no_grad():
-            query_model_output = self.model(**query_inputs)
+  def _mean_pooling(self, model_output, attention_mask):
+    """
+    Performs mean pooling on the last hidden state of the BERT model output, weighted by the attention mask.
 
-        query_embedding = self._mean_pooling(query_model_output, query_inputs["attention_mask"])
+    Args:
+        model_output: The output dictionary from the BERT model.
+        attention_mask: The attention mask for the input sequence.
 
-        return query_embedding
+    Returns:
+        torch.Tensor: The sentence embedding as a PyTorch tensor.
+    """
+
+    token_embeddings = model_output.last_hidden_state  # Extract token embeddings from the model output
+    input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()  # Expand attention mask for element-wise multiplication
+
+    # Weight token embeddings by attention mask and calculate sum
+    sum_embeddings = torch.sum(token_embeddings * input_mask_expanded, 1)
+    sum_mask = torch.clamp(input_mask_expanded.sum(1), min=1e-9)  # Avoid division by zero
+
+    # Normalize the sum by the number of valid tokens (weighted by attention mask)
+    return sum_embeddings / sum_mask
+
+
+  def embed_text(self, examples):
+    """
+    Embeds a list of text examples using the BERT model.
+
+    Args:
+        examples (list): A list of dictionaries where each dictionary has a "content" key with the text content to embed.
+
+    Returns:
+        dict: A dictionary with an "embedding" key containing a NumPy array of the sentence embeddings.
+    """
+
+    inputs = self.tokenizer(  # Tokenize the text examples
+        examples["content"], padding=True, truncation=True, return_tensors="pt"
+    )
+
+    with torch.no_grad():  # Disable gradient calculation for efficiency during embedding generation
+      model_output = self.model(**inputs)  # Get the model output for the tokenized text
+      pooled_embeds = self._mean_pooling(model_output, inputs["attention_mask"])  # Perform mean pooling to generate sentence embeddings
+
+    return {"embedding": pooled_embeds.cpu().numpy()}  # Convert the PyTorch tensor to a NumPy array and return a dictionary
+
+
+  def generate_embeddings(self, dataset):
+    """
+    Generates embeddings for a dataset using batched processing for efficiency.
+
+    Args:
+        dataset (transformers.data.Dataset): A Hugging Face Dataset object.
+
+    Returns:
+        transformers.data.Dataset: The same dataset object with an additional "embedding" column containing the sentence embeddings.
+    """
+
+    return dataset.map(self.embed_text, batched=True, batch_size=128)  # Apply the embed_text function to each element in the dataset in batches
+
+
+  def embed_query(self, query_text):
+    """
+    Embeds a single query text using the BERT model.
+
+    Args:
+        query_text (str): The query text to embed.
+
+    Returns:
+        torch.Tensor: The query embedding as a PyTorch tensor.
+    """
+
+    query_inputs = self.tokenizer(  # Tokenize the query text
+        query_text, padding=True, truncation=True, return_tensors="pt"
+    )
+
+    with torch.no_grad():  # Disable gradient calculation for efficiency during embedding generation
+      query_model_output = self.model(**query_inputs)  # Get the model output for the tokenized query text
+
+    query_embedding = self._mean_pooling(query_model_output, query_inputs["attention_mask"])  # Perform mean pooling to generate the query embedding
+
+    return query_embedding
