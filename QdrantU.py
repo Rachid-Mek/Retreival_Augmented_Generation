@@ -6,8 +6,6 @@ from qdrant_client import QdrantClient
 class QdrantU:
     def __init__(self, collection_name):
         self.client = QdrantClient(
-            # url="https://5c32ac64-b1f7-4665-91eb-e321a98c02f6.europe-west3-0.gcp.cloud.qdrant.io:6333",
-            # api_key="Wd_RTregmznFMCyDLagJHM_7a5TjJJuFLVTuMgfjQD44-BHLnhYbUg",
             url="https://c60e574c-c519-4fbb-be80-1710d3b73053.europe-west3-0.gcp.cloud.qdrant.io",
             api_key="njaSPeFbhkN1jPqOXUMdimkDkOasd2FAbENpGwlL2NXQG2LsxAHY-g",
         )

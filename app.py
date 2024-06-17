@@ -165,7 +165,7 @@ def chat(
         max_new_tokens=max_tokens,
         top_p=top_p,
         stream=True,
-        frequency_penalty = 2,
+        # frequency_penalty = 2,
         do_sample=True ,
         stop_sequences =stop_sequences,
     ):
