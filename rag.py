@@ -35,7 +35,7 @@ def run_rag(query, history=None):
     # Extract document content from search results and remove duplicates
     docs = list(set([result.payload['content'] for result in search_results]))
 
-    # Cohere API key for reranking (replace with your own key)
+    # Cohere API key for reranking
     apiKey = 'Q21IIAUkTtt1jk9WUgJg0XiCvaU2K73cFbq0djhM'
     co = cohere.Client(apiKey)
 
