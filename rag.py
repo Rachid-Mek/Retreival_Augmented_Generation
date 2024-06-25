@@ -35,23 +35,32 @@ def run_rag(query, history=None):
     # Extract document content from search results and remove duplicates
     docs = list(set([result.payload['content'] for result in search_results]))
 
-    # Cohere API key for reranking (replace with your own key)
+    # Cohere API key for reranking
     apiKey = 'Q21IIAUkTtt1jk9WUgJg0XiCvaU2K73cFbq0djhM'
-    co = cohere.Client(apiKey)
+    #LNhDbqVEBzcITneWjXo0kSPB0yo3uz41uDYJSkGa
+    #cdvBQjpd2pWTXOgkqtXYHLCiiKmHeeKeYzuIfPw3
+    #og6kr65KuO2JOomaaF8AR4pFVFIDcnJAL06QWOId
 
-    # Rerank documents using Cohere's rerank-english-v3.0 model
-    rerank_docs = co.rerank(
-        query=query,
-        documents=docs,
-        top_n=2,  # Select the top 2 reranked documents
-        model="rerank-english-v3.0"
-    )
+    try:
+        co = cohere.Client(apiKey)
 
-    # Extract document indices from the reranked results
-    indices = [result.index for result in rerank_docs.results]
+        # Rerank documents using Cohere's rerank-english-v3.0 model
+        rerank_docs = co.rerank(
+            query=query,
+            documents=docs,
+            top_n=2,  # Select the top 2 reranked documents
+            model="rerank-english-v3.0"
+        )
 
-    # Retrieve the full content of the reranked documents
-    documents = get_docs_by_indices(docs, indices)
+        # Extract document indices from the reranked results
+        indices = [result.index for result in rerank_docs.results]
+
+        # Retrieve the full content of the reranked documents
+        documents = get_docs_by_indices(docs, indices)
+    except Exception as e:
+        print("Error in reranking:", e)
+        # Use the original search results if reranking fails
+        documents = docs[:2]  # Select the top 2 documents from the original search results
 
     # Generate a prompt based on the retrieved documents, query, and history (if provided)
     prompt = generate_prompt(documents, query, history)
