@@ -21,13 +21,12 @@ client = MongoClient(MONGO_URI, server_api=ServerApi('1'))
 db = client[DB_NAME]
 
 #  ================================================================================================================================
-system_message ="You are a capable and freindly assistant."
+system_message ="<|start_header_id|>You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible based on the context. Do not mention that you used the provided context and do not add any additional questions.<|end_header_id|>"
 TOKEN = os.getenv("HF_TOKEN")
 
 Endpoint_URL = "https://gx986bv0z1k42aqe.us-east-1.aws.endpoints.huggingface.cloud/"
 client = InferenceClient(Endpoint_URL, token=TOKEN)
 
-system_message = "You are a capable and friendly assistant."
 
 no_change_btn = gr.Button()
 enable_btn = gr.Button(interactive=True)
@@ -132,6 +131,7 @@ def chat(
     yield ("", chatbot) + (disable_btn,) * 5
 
     messages = [{"role": "system", "content": system_message}]
+    # messages = []
     history = state.get_history()
     state.save_question(message)
 

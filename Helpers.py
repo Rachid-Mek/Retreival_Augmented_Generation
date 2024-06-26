@@ -18,15 +18,43 @@ sentence_transformer_model = SentenceTransformer("all-mpnet-base-v2")
 
 # -------------------------------------------------------------------------------------------------------
 
+# def generate_prompt(context, question, history=None):
+#     history_summary = ""
+#     if history:
+#         for entry in history[-3:]:  # Limit to the last 3 entries for brevity
+#             user_query, bot_response = entry["role"], entry["content"]
+#             history_summary += f"User: {user_query}\nAssistant: {bot_response}\n"
+    
+#     context = ". ".join(context)
+#     print(context)
+#     print("Calculating the similarity...")
+    
+#     if validate_revised_query(context, question, threshold=0.4):
+#         prompt_context = context
+#     else:
+#         prompt_context = "No context provided. Response based on the question only."
+    
+#     prompt = f"""
+#     <|start_header_id|>system<|end_header_id|> You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible based on the context, while being safe. Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Do not mention that you used the provided context. Do not add any additional questions.
+#     Conversation History:
+#     {history_summary}
+#     Context:
+#     {prompt_context} <|eot_id|>
+
+#     <|start_header_id|>user<|end_header_id|> This is the question:
+#     {question} <|eot_id|>
+#     Response:
+#     """
+ 
+#     return prompt
+
 def generate_prompt(context, question, history=None):
     """
     This function generates a prompt for a large language model (LLM) based on context, question, and history.
-
     Args:
         context (list): A list of strings representing the contextual information.
         question (str): The user's question.
         history (list, optional): A list of previous prompts and responses (for potential future use). Defaults to None.
-
     Returns:
         str: The generated prompt formatted for the LLM.
     """
@@ -51,17 +79,15 @@ def generate_prompt(context, question, history=None):
 
     # Construct the LLM prompt template with desired attributes
     prompt = f"""
-You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible based on the context. Do not mention that you used the provided context and do not add any additional questions.
-
+You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible based on the context, while being safe. Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Do not mention that you used the provided context. Do not add any additional questions.
 Conversation History:
 {history_summary}
-
 Context:
 {prompt_context}
-
-User: {question}
-
+User: 
+{question}
 Assistant:
+
 """
 
     return prompt
