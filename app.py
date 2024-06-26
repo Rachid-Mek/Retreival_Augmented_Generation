@@ -232,8 +232,8 @@ with gr.Blocks(title="RAG", theme=theme, css=block_css, fill_height=True) as dem
                 [f"Can you provide information on the recent increase in Bitcoin prices?"],
                 [f"Can you provide an update on the current situation in the Ukraine-Russia war?"],
                 [f"How accurate are the reports about the increase in oil prices?"],
-                [f"Could you provide an update on the current situation in Gaza regarding the conflicts between Israel and Palestine?"],
-                [f"Could you please provide the current price of Ethereum and any recent updates regarding changes in its price?"],
+                [f"Can you provide me with an update on the current situation in Gaza regarding the conflicts between Israel and Palestine?"],
+                [f"can you please provide the current price of Ethereum and any recent updates regarding changes in its price?"],
             ], inputs=[textbox], label="Examples")
 
             with gr.Accordion("Parameters", open=False) as parameter_row:
