@@ -228,12 +228,12 @@ with gr.Blocks(title="RAG", theme=theme, css=block_css, fill_height=True) as dem
     
             with gr.Accordion("Examples", open=True) as Examples_row:
                 gr.Examples(examples=[
-                [f"Could you provide the latest global news updates?"],
-                [f"Can you provide information on the recent increase in Bitcoin prices?"],
-                [f"Can you provide an update on the current situation in the Ukraine-Russia war?"],
+                [f"provide me with the latest global news updates?"],
+                [f"provide me with information on the recent increase in Bitcoin prices?"],
+                [f"provide me with an update on the current situation in the Ukraine-Russia war?"],
                 [f"How accurate are the reports about the increase in oil prices?"],
-                [f"Can you provide me with an update on the current situation in Gaza regarding the conflicts between Israel and Palestine?"],
-                [f"can you please provide the current price of Ethereum and any recent updates regarding changes in its price?"],
+                [f"provide me with an update on the current situation in Gaza regarding the conflicts between Israel and Palestine?"],
+                [f"give me the current price of Ethereum and any recent updates regarding changes in its price?"],
             ], inputs=[textbox], label="Examples")
 
             with gr.Accordion("Parameters", open=False) as parameter_row:
