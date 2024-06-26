@@ -53,7 +53,7 @@ def generate_prompt(context, question, history=None):
     prompt = f"""
 You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible based on the context, while being safe. Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Do not mention that you used the provided context. Do not add any additional questions.
 
-Conversation History:
+Conversation History: 
 {history_summary}
 
 Context:

@@ -26,8 +26,7 @@ TOKEN = os.getenv("HF_TOKEN")
 
 Endpoint_URL = "https://gx986bv0z1k42aqe.us-east-1.aws.endpoints.huggingface.cloud/"
 client = InferenceClient(Endpoint_URL, token=TOKEN)
-# model_name = "HuggingFaceH4/zephyr-7b-beta"
-# client = InferenceClient(model_name, token=TOKEN)
+
 system_message = "You are a capable and friendly assistant."
 
 no_change_btn = gr.Button()
@@ -84,7 +83,8 @@ def save_interaction_to_db(question, answer, upvote, downvote, flag):
     print("Interaction saved to MongoDB")
 
 def save_chat(question, answer, upvote=0, downvote=0, flag=0):
-    save_interaction_to_db(question, answer, upvote, downvote, flag)
+    # save_interaction_to_db(question, answer, upvote, downvote, flag)
+    pass
 
 def check_textbox(text):
     if text.strip():
@@ -112,7 +112,6 @@ def remove_last_response(chatbot):
     textbox = state.current_query
     state.history.pop()
     state.history.pop()
-    # clear the last response
     chatbot.clear()
     return (textbox, chatbot) + (enable_btn,) * 5
 
@@ -145,27 +144,16 @@ def chat(
 
     response = ""
 
-    # for msg in client.chat_completion(
-    #     messages,
-    #     max_tokens=max_tokens,
-    #     stream=True,
-    #     temperature=temperature,
-    #     top_p=top_p,
-    # ):
-    #     token = msg.choices[0].delta.content
-    #     response += str(token)
-    #     chatbot[-1] = (question, response)
-    #     yield ("", chatbot) + (disable_btn,) * 5
+
     stop_sequences = ['<|eot_id|>']
     prompt=run_rag(question, history=history)
-    # print("Prompt: ", prompt)
+
     for msg in client.text_generation(
         prompt=prompt,
         temperature=temperature,
         max_new_tokens=max_tokens,
         top_p=top_p,
         stream=True,
-        # frequency_penalty = 2,
         do_sample=True ,
         stop_sequences =stop_sequences,
     ):
@@ -240,14 +228,12 @@ with gr.Blocks(title="RAG", theme=theme, css=block_css, fill_height=True) as dem
     
             with gr.Accordion("Examples", open=True) as Examples_row:
                 gr.Examples(examples=[
-                [f"Tell me about the latest news in the world?"],
-                [f"Tell me about the increase in the price of Bitcoin?"],
-                [f"Tell me about the actual situation in Ukraine?"],
-                [f"How true is the news about the increase in the price of oil?"],
-                [f"Tell me about current situation in Palestinian?"],
-                [f"Tell me about the current situation in Afghanistan?"],
-                [f"What are the agenda of the United Nations?"],
-                ["How is Trump's campaign going?"],
+                [f"Could you provide the latest global news updates?"],
+                [f"Can you provide information on the recent increase in Bitcoin prices?"],
+                [f"Can you provide an update on the current situation in the Ukraine-Russia war?"],
+                [f"How accurate are the reports about the increase in oil prices?"],
+                [f"Could you provide an update on the current situation in Gaza regarding the conflicts between Israel and Palestine?"],
+                [f"Could you please provide the current price of Ethereum and any recent updates regarding changes in its price?"],
             ], inputs=[textbox], label="Examples")
 
             with gr.Accordion("Parameters", open=False) as parameter_row:
