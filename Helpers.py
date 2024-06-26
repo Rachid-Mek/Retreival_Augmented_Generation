@@ -60,36 +60,47 @@ def generate_prompt(context, question, history=None):
     """
 
     history_summary = ""
-    if history:
+    if history is not []:
         # Limit summary to the last 3 entries for conciseness
         for entry in history[-3:]:
-            user_query, bot_response = entry["role"], entry["content"]
-            history_summary += f"User: {user_query}\nAssistant: {bot_response}\n"
+            print("entry" , entry)
+            role, content = entry["role"], entry["content"]
+            if role == "user":
+                history_summary += f"User: {content}\n"
+            elif role == "system":
+                history_summary += f"Assistant: {content}\n"
 
     # Combine context sentences into a single string
     context = ". ".join(context)
-    print(context)
-    print("Calculating the similarity...")
+    # print(context)
+    print("Calculating the similarity between context and question...")
 
     # Check if context and question are similar enough to avoid unnecessary context usage
     if validate_revised_query(context, question, threshold=0.4):
         prompt_context = context
     else:
         prompt_context = "No context provided. Response based on the question only."
-
-    # Construct the LLM prompt template with desired attributes
-    prompt = f"""
-You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible based on the context, while being safe. Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Do not mention that you used the provided context. Do not add any additional questions.
-Conversation History:
-{history_summary}
-Context:
-{prompt_context}
-User: 
-{question}
-Assistant:
-
-"""
-
+    if history_summary == "":
+            prompt = f"""
+              You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible based on the context, while being safe. Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Do not mention that you used the provided context. Do not add any additional questions.
+              Context:
+              {prompt_context}
+              User: 
+              {question}
+              Assistant:
+              """
+    else:
+        prompt = f"""
+              You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible based on the context, while being safe. Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Do not mention that you used the provided context. Do not add any additional questions.
+              Conversation History:
+                    {history_summary}
+              Context:
+                    {prompt_context}
+              User: 
+                    {question}
+              Assistant:
+              """
+    print("Prompt : ", prompt)
     return prompt
 
 

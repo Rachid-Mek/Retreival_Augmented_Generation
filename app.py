@@ -132,20 +132,19 @@ def chat(
     chatbot.append((question, None))
     yield ("", chatbot) + (disable_btn,) * 5
 
-    messages = [{"role": "system", "content": system_message}]
+    # messages = [{"role": "system", "content": system_message}]
     # messages = []
     history = state.get_history()
-    state.save_question(message)
 
-    if len(history) > 1:
-        print("History: ", history[-2])
-    for val in history:
-        messages.append(val)
+    # if len(history) > 1:
+    #     print("History: ", history[-2])
+    # for val in history:
+    #     messages.append(val)
 
     # messages.append({"role": "user", "content": run_rag(message)})
 
     response = ""
-
+    print("===================================== New Chat ======================================")
 
     stop_sequences = ['<|eot_id|>']
     prompt=run_rag(question, history=history)
@@ -164,6 +163,7 @@ def chat(
         # chatbot.append(( response, response)) 
         chatbot[-1] = (question, response)
         yield ("", chatbot) + (disable_btn,) * 5
+    state.save_question(question)
     state.save_response(response)
     save_chat(question, response)  
     yield ("", chatbot) + (enable_btn,) * 5
