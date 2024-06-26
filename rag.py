@@ -36,7 +36,9 @@ def run_rag(query, history=None):
     docs = list(set([result.payload['content'] for result in search_results]))
 
     # Cohere API key for reranking
-    apiKey = 'Q21IIAUkTtt1jk9WUgJg0XiCvaU2K73cFbq0djhM'
+    # apiKey = 'Q21IIAUkTtt1jk9WUgJg0XiCvaU2K73cFbq0djhM'
+    apiKey = '6NPfLhXGWyIuQYKwW193vMptTy3h5CSWFni5ZIVg' # New API Key 26th Juin 2024
+
     #LNhDbqVEBzcITneWjXo0kSPB0yo3uz41uDYJSkGa
     #cdvBQjpd2pWTXOgkqtXYHLCiiKmHeeKeYzuIfPw3
     #og6kr65KuO2JOomaaF8AR4pFVFIDcnJAL06QWOId
