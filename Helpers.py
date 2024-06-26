@@ -51,7 +51,7 @@ def generate_prompt(context, question, history=None):
 
     # Construct the LLM prompt template with desired attributes
     prompt = f"""
-You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible based on the context, while being safe. Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Do not mention that you used the provided context. Do not add any additional questions.
+You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible based on the context. Do not mention that you used the provided context and do not add any additional questions.
 
 Conversation History:
 {history_summary}
