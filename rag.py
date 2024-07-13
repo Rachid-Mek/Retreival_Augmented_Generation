@@ -2,6 +2,10 @@ from QdrantU import QdrantU
 from Processing import TextEmbedder
 import cohere
 from Helpers import generate_prompt, get_docs_by_indices, query_rewriter
+import os
+import dotenv
+
+dotenv.load_dotenv()
 
 def run_rag(query, history=None):
     """
@@ -21,30 +25,20 @@ def run_rag(query, history=None):
     # QdrantU client for document search
     uploader = QdrantU(collection_name='News_Articles_Source')
 
-    # Attempt query rewriting (optional, handle potential errors)
+    # Attempt query rewriting
     try:
         query = query_rewriter(query)
         print("Query after rewriting: ", query)
     except Exception as e:
         print("Error in query rewriting:", e)
-        pass  # Continue processing even if rewriting fails
+        pass 
 
-    # Search for relevant documents using the embedding model and limit results
+
     search_results = uploader.search(query, embedding_model, limit=1000)
 
-    # Extract document content from search results and remove duplicates
     docs = list(set([result.payload['content'] for result in search_results]))
 
-    # Cohere API key for reranking
-    # apiKey = 'Q21IIAUkTtt1jk9WUgJg0XiCvaU2K73cFbq0djhM'
-
-    apiKey = 'og6kr65KuO2JOomaaF8AR4pFVFIDcnJAL06QWOId'
-    #6NPfLhXGWyIuQYKwW193vMptTy3h5CSWFni5ZIVg new
-    #ussiQhzRw0s8wkjI8tZEX6LTkuOpNEUwpMlHj3ua
-    #LNhDbqVEBzcITneWjXo0kSPB0yo3uz41uDYJSkGa
-    #cdvBQjpd2pWTXOgkqtXYHLCiiKmHeeKeYzuIfPw3
-    #og6kr65KuO2JOomaaF8AR4pFVFIDcnJAL06QWOId
-    #Q21IIAUkTtt1jk9WUgJg0XiCvaU2K73cFbq0djhM
+    apiKey = os.getenv("cohere_api_key")
 
     try:
         co = cohere.Client(apiKey)
@@ -53,21 +47,18 @@ def run_rag(query, history=None):
         rerank_docs = co.rerank(
             query=query,
             documents=docs,
-            top_n=2,  # Select the top 2 reranked documents
+            top_n=2, 
             model="rerank-english-v3.0"
         )
 
-        # Extract document indices from the reranked results
         indices = [result.index for result in rerank_docs.results]
 
-        # Retrieve the full content of the reranked documents
         documents = get_docs_by_indices(docs, indices)
     except Exception as e:
         print("Error in reranking:", e)
-        # Use the original search results if reranking fails
-        documents = docs[:2]  # Select the top 2 documents from the original search results
 
-    # Generate a prompt based on the retrieved documents, query, and history (if provided)
+        documents = docs[:2] 
+
     prompt = generate_prompt(documents, query, history)
 
     return prompt

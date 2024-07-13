@@ -1,13 +1,17 @@
 import uuid
 from qdrant_client.http import models
 from qdrant_client import QdrantClient
+import os 
+import dotenv
+
+dotenv.load_dotenv()
 
 
 class QdrantU:
     def __init__(self, collection_name):
         self.client = QdrantClient(
-            url="https://c60e574c-c519-4fbb-be80-1710d3b73053.europe-west3-0.gcp.cloud.qdrant.io",
-            api_key="njaSPeFbhkN1jPqOXUMdimkDkOasd2FAbENpGwlL2NXQG2LsxAHY-g",
+            url=os.getenv("qdrant_url"),
+            api_key=os.getenv("qdrant_api_key"),
         )
         self.collection_name = collection_name
 

@@ -1,3 +1,4 @@
+import os
 import re
 import requests
 import json
@@ -7,6 +8,9 @@ import torch
 from textblob import TextBlob
 from transformers import BertModel, AutoTokenizer
 from sentence_transformers import SentenceTransformer, util
+import dotenv
+
+dotenv.load_dotenv()
 
 # Load BERT tokenizer and model
 model_name = "bert-base-uncased"
@@ -15,38 +19,6 @@ Bert_model = BertModel.from_pretrained(model_name)
 
 # Load SentenceTransformer model
 sentence_transformer_model = SentenceTransformer("all-mpnet-base-v2")
-
-# -------------------------------------------------------------------------------------------------------
-
-# def generate_prompt(context, question, history=None):
-#     history_summary = ""
-#     if history:
-#         for entry in history[-3:]:  # Limit to the last 3 entries for brevity
-#             user_query, bot_response = entry["role"], entry["content"]
-#             history_summary += f"User: {user_query}\nAssistant: {bot_response}\n"
-    
-#     context = ". ".join(context)
-#     print(context)
-#     print("Calculating the similarity...")
-    
-#     if validate_revised_query(context, question, threshold=0.4):
-#         prompt_context = context
-#     else:
-#         prompt_context = "No context provided. Response based on the question only."
-    
-#     prompt = f"""
-#     <|start_header_id|>system<|end_header_id|> You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible based on the context, while being safe. Your answers should not include any harmful, unethical, racist, sexist, toxic, dangerous, or illegal content. Do not mention that you used the provided context. Do not add any additional questions.
-#     Conversation History:
-#     {history_summary}
-#     Context:
-#     {prompt_context} <|eot_id|>
-
-#     <|start_header_id|>user<|end_header_id|> This is the question:
-#     {question} <|eot_id|>
-#     Response:
-#     """
- 
-#     return prompt
 
 def generate_prompt(context, question, history=None):
     """
@@ -129,7 +101,7 @@ def llama(prompt):
     headers = {
         "accept": "application/json",
         "content-type": "application/json",
-        "authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiMmYzMDE3MTEtOTJmNy00ZDU3LTg4N2MtNjU2MmE5MTU5MWZhIiwidHlwZSI6ImFwaV90b2tlbiJ9.vWvooRwxmr-uY1c61V97uugyDGpXmZGjX8oCFWKCUeM"
+        "authorization": os.getenv("eden_api")
     }
     response = requests.post(url, json=payload, headers=headers)
     result = response.json()
@@ -147,12 +119,11 @@ def question_answering(question):
   """
 
   # Replace with your actual OpenAI API key
-  headers = {"Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiMmYzMDE3MTEtOTJmNy00ZDU3LTg4N2MtNjU2MmE5MTU5MWZhIiwidHlwZSI6ImFwaV90b2tlbiJ9.vWvooRwxmr-uY1c61V97uugyDGpXmZGjX8oCFWKCUeM"}
+  headers = {"Authorization": os.getenv("eden_api")}
 
   # URL for OpenAI question answering endpoint
   url = "https://api.edenai.run/v2/text/question_answer"
 
-  # Payload for the request containing question and context
   payload = {
     "providers": "openai",  # Specify OpenAI as the provider
     "texts": [ # List of text snippets for context
@@ -237,8 +208,7 @@ def query_rewriter(original_query):
     return original_query
 
   try:
-    # Authorization header with placeholder (replace with your actual API key)
-    headers = {"Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiMmYzMDE3MTEtOTJmNy00ZDU3LTg4N2MtNjU2MmE5MTU5MWZhIiwidHlwZSI6ImFwaV90b2tlbiJ9.vWvooRwxmr-uY1c61V97uugyDGpXmZGjX8oCFWKCUeM"}
+    headers = {"Authorization": os.getenv("eden_api")}
 
     # URL for the OpenAI code generation endpoint
     url = "https://api.edenai.run/v2/text/code_generation"
@@ -254,10 +224,10 @@ def query_rewriter(original_query):
       comprehensive information from a database or search engine. Ensure the rewritten query is clear, specific,
       and free of ambiguities. Here are a few examples:
           Original Query: who is Joe Biden? Rewritten Query: Provide detailed information about Joe Biden, including his political career, achievements, current position, and a history of his personal and professional life?
-      Original Query: {original_query}""",  # Include the original query in the prompt
-      "temperature": 0.6,  # Control the randomness of the generated text (0.6 is a medium value)
-      "max_tokens": 512,  # Maximum number of tokens to generate
-      "fallback_providers": "['openai']"  # Alternative provider if OpenAI fails
+      Original Query: {original_query}""", 
+      "temperature": 0.6, 
+      "max_tokens": 512,  
+      "fallback_providers": "['openai']"  
     }
 
     # Send POST request with JSON payload and headers
@@ -314,7 +284,6 @@ def score_query(query):
   if not re.search(question_pattern, query.lower()):
     score += 2  # Lack of question words gets a higher penalty
 
-  # Check for spelling errors and grammatical mistakes (might be harder to understand)
   blob = TextBlob(query)
   if len(blob.correct().words) != len(blob.words):
     score += 1  # Spelling errors get a penalty

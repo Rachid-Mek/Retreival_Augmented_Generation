@@ -13,18 +13,21 @@ from gradio.themes.utils import (
     get_theme_assets,
     sizes,
 )
+import os
+from dotenv import load_dotenv
 
-MONGO_URI = "mongodb+srv://rachidmkd16:gVvZdKv4L8EArNjC@news-database.kjitsql.mongodb.net/?retryWrites=true&w=majority&appName=news-database"
-DB_NAME = 'news_database'
+load_dotenv()
+
+MONGO_URI = os.getenv("MONGO_URI")
+DB_NAME = os.getenv("DB_NAME")
 COLLECTION_NAME = 'tracking'
 client = MongoClient(MONGO_URI, server_api=ServerApi('1'))
 db = client[DB_NAME]
 
-#  ================================================================================================================================
 system_message ="<|start_header_id|>You are a helpful, respectful, and honest assistant. Always answer as helpfully as possible based on the context. Do not mention that you used the provided context and do not add any additional questions.<|end_header_id|>"
 TOKEN = os.getenv("HF_TOKEN")
 
-Endpoint_URL = "https://gx986bv0z1k42aqe.us-east-1.aws.endpoints.huggingface.cloud/"
+Endpoint_URL = os.getenv("HF_ENDPOINT_URL")
 client = InferenceClient(Endpoint_URL, token=TOKEN)
 
 
@@ -132,16 +135,7 @@ def chat(
     chatbot.append((question, None))
     yield ("", chatbot) + (disable_btn,) * 5
 
-    # messages = [{"role": "system", "content": system_message}]
-    # messages = []
     history = state.get_history()
-
-    # if len(history) > 1:
-    #     print("History: ", history[-2])
-    # for val in history:
-    #     messages.append(val)
-
-    # messages.append({"role": "user", "content": run_rag(message)})
 
     response = ""
     print("===================================== New Chat ======================================")
@@ -293,5 +287,3 @@ with gr.Blocks(title="RAG", theme=theme, css=block_css, fill_height=True) as dem
 #  ================================================================================================================================
 demo.queue()
 demo.launch()
-
-#  ================================================================================================================================

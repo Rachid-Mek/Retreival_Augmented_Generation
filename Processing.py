@@ -26,12 +26,12 @@ class TextEmbedder:
         torch.Tensor: The sentence embedding as a PyTorch tensor.
     """
 
-    token_embeddings = model_output.last_hidden_state  # Extract token embeddings from the model output
-    input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()  # Expand attention mask for element-wise multiplication
+    token_embeddings = model_output.last_hidden_state  
+    input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float() 
 
     # Weight token embeddings by attention mask and calculate sum
     sum_embeddings = torch.sum(token_embeddings * input_mask_expanded, 1)
-    sum_mask = torch.clamp(input_mask_expanded.sum(1), min=1e-9)  # Avoid division by zero
+    sum_mask = torch.clamp(input_mask_expanded.sum(1), min=1e-9)  
 
     # Normalize the sum by the number of valid tokens (weighted by attention mask)
     return sum_embeddings / sum_mask
@@ -48,16 +48,14 @@ class TextEmbedder:
         dict: A dictionary with an "embedding" key containing a NumPy array of the sentence embeddings.
     """
 
-    inputs = self.tokenizer(  # Tokenize the text examples
+    inputs = self.tokenizer( 
         examples["content"], padding=True, truncation=True, return_tensors="pt"
     )
 
-    with torch.no_grad():  # Disable gradient calculation for efficiency during embedding generation
-      model_output = self.model(**inputs)  # Get the model output for the tokenized text
-      pooled_embeds = self._mean_pooling(model_output, inputs["attention_mask"])  # Perform mean pooling to generate sentence embeddings
-
-    return {"embedding": pooled_embeds.cpu().numpy()}  # Convert the PyTorch tensor to a NumPy array and return a dictionary
-
+    with torch.no_grad(): 
+      model_output = self.model(**inputs)
+      pooled_embeds = self._mean_pooling(model_output, inputs["attention_mask"])  
+    return {"embedding": pooled_embeds.cpu().numpy()}  
 
   def generate_embeddings(self, dataset):
     """
@@ -70,8 +68,7 @@ class TextEmbedder:
         transformers.data.Dataset: The same dataset object with an additional "embedding" column containing the sentence embeddings.
     """
 
-    return dataset.map(self.embed_text, batched=True, batch_size=128)  # Apply the embed_text function to each element in the dataset in batches
-
+    return dataset.map(self.embed_text, batched=True, batch_size=128)  
 
   def embed_query(self, query_text):
     """
@@ -84,13 +81,12 @@ class TextEmbedder:
         torch.Tensor: The query embedding as a PyTorch tensor.
     """
 
-    query_inputs = self.tokenizer(  # Tokenize the query text
+    query_inputs = self.tokenizer( 
         query_text, padding=True, truncation=True, return_tensors="pt"
     )
 
-    with torch.no_grad():  # Disable gradient calculation for efficiency during embedding generation
-      query_model_output = self.model(**query_inputs)  # Get the model output for the tokenized query text
-
-    query_embedding = self._mean_pooling(query_model_output, query_inputs["attention_mask"])  # Perform mean pooling to generate the query embedding
+    with torch.no_grad():  
+      query_model_output = self.model(**query_inputs)  
+    query_embedding = self._mean_pooling(query_model_output, query_inputs["attention_mask"])  
 
     return query_embedding
