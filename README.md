@@ -21,8 +21,8 @@ Within this project, our aim is to introduce a ground-breaking RAG that promises
 1. **Clone the Repository**
 
    ```sh
-   git clone https://github.com/Rachid-Mek/RAG.git
-   cd RAG
+   git clone https://github.com/Rachid-Mek/Retreival_Augmented_Generation.git
+   cd Retreival_Augmented_Generation
    ```
 
 2. **Create a Virtual Environment**
