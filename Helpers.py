@@ -100,7 +100,7 @@ def generate_prompt(context, question, history=None):
                     {question}
               Assistant:
               """
-    print("Prompt : ", prompt)
+    # print("Prompt : ", prompt)
     return prompt
 
 
