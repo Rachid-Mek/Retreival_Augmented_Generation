@@ -50,10 +50,6 @@ Within this project, our aim is to introduce a ground-breaking RAG that promises
 
    Use the interface provided by the application to input your queries and receive responses generated through the RAG model.
 
-## Contributing
-
-We welcome contributions to this project. If you have suggestions for improvements, please feel free to open an issue or submit a pull request.
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
@@ -61,18 +57,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Acknowledgments
 
 We would like to thank the developers of LLAMA 3 and the RAG framework for their groundbreaking work which made this project possible.
-
----
-
-title: Llama3-8b-RAG News Finance
-emoji: 💬
-colorFrom: yellow
-colorTo: purple
-sdk: gradio
-app_file: app.py
-pinned: false
-license: apache-2.0
-
----
-
-An example chatbot using [Gradio](https://gradio.app), [`huggingface_hub`](https://huggingface.co/docs/huggingface_hub/v0.22.2/en/index), and the [Hugging Face Inference API](https://huggingface.co/docs/api-inference/index).
