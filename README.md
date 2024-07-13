@@ -56,4 +56,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Acknowledgments
 
-We would like to thank the developers of LLAMA 3 and the RAG framework for their groundbreaking work which made this project possible.
+We would like to thank the developers of LLAMA 3 for their groundbreaking work which made this project possible.
